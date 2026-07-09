@@ -1,21 +1,7 @@
-// src/engine/inspector.js
-// the main inspection pipeline — this is where all the pieces come together
-//
-// every incoming request passes through here. we run it against:
-// 1. IP allowlist/blocklist (fast path)
-// 2. custom rules
-// 3. rate limiting
-// 4. all detection rule modules
-//
-// the first match wins. if anything flags it, we return the block decision.
-// in "monitor" mode, we still log but don't actually block.
-
 const logger = require('../utils/logger');
 const { getClientIp, isIpInList } = require('../utils/ip');
 const { checkRateLimit } = require('./ratelimit');
 const queries = require('../db/queries');
-
-// import all rule modules
 const sqli = require('./rules/sqli');
 const xss = require('./rules/xss');
 const cmdi = require('./rules/cmdi');
@@ -25,9 +11,6 @@ const ssrf = require('./rules/ssrf');
 const xxe = require('./rules/xxe');
 const crlf = require('./rules/crlf');
 const botdetect = require('./botdetect');
-
-// rule modules in order of execution
-// order matters — put fast/common checks first
 const RULE_MODULES = [
   sqli,
   xss,
@@ -39,8 +22,6 @@ const RULE_MODULES = [
   rce,
   botdetect,
 ];
-
-// cache for IP lists so we don't hit the DB on every request
 let blockedIpsCache = [];
 let allowedIpsCache = [];
 let customRulesCache = [];
@@ -62,33 +43,28 @@ function refreshCache() {
 }
 
 /**
- * Inspect an incoming request
- * @param {object} req - the HTTP request object
- * @param {object} site - the site config this request matches (if any)
- * @returns {{ blocked: boolean, rule?: string, ruleName?: string, severity?: string, detail?: string, payload?: string, action?: string }}
+ * Core inspection engine. Evaluates an incoming HTTP request against the 
+ * configured blocklists, allowlists, custom rules, rate limits, and built-in WAF rules.
+ * Returns an object indicating whether the request should be blocked.
+ * 
+ * @param {import('http').IncomingMessage} req - The incoming HTTP request
+ * @param {Object} [site] - Optional site configuration containing WAF status and limits
+ * @returns {{blocked: boolean, rule?: string, action?: string, detail?: string}} Inspection result
  */
 function inspect(req, site = null) {
   refreshCache();
 
   const ip = getClientIp(req);
   const wafMode = queries.getSetting('waf_mode') || 'block';
-
-  // if WAF is off, pass everything
   if (wafMode === 'off') {
     return { blocked: false };
   }
-
-  // if site has WAF disabled, pass
   if (site && !site.waf_enabled) {
     return { blocked: false };
   }
-
-  // --- fast path: IP allowlist ---
   if (isIpInList(ip, allowedIpsCache)) {
     return { blocked: false };
   }
-
-  // --- fast path: IP blocklist ---
   if (isIpInList(ip, blockedIpsCache)) {
     const result = {
       blocked: true,
@@ -102,19 +78,14 @@ function inspect(req, site = null) {
     logAttack(req, result, site);
     return result;
   }
-
-  // --- custom rules ---
   const customResult = checkCustomRules(req, ip);
   if (customResult.blocked) {
     logAttack(req, customResult, site);
     return customResult;
   }
-  // custom allow rules can whitelist specific requests
   if (customResult.allowed) {
     return { blocked: false };
   }
-
-  // --- rate limiting ---
   let rateLimits = {};
   if (site) {
     const rl = queries.getRateLimitForSite(site.id);
@@ -137,9 +108,6 @@ function inspect(req, site = null) {
     logAttack(req, result, site);
     return result;
   }
-
-  // --- detection rules ---
-  // parse query params for rule modules
   if (req.url && !req.query) {
     req.query = parseQuery(req.url);
   }
@@ -151,16 +119,12 @@ function inspect(req, site = null) {
         const action = wafMode === 'monitor' ? 'monitored' : 'blocked';
         const fullResult = { ...result, action };
         logAttack(req, fullResult, site);
-
-        // in monitor mode, log but don't block
         if (wafMode === 'monitor') {
           return { blocked: false, monitored: true, ...result };
         }
         return fullResult;
       }
     } catch (err) {
-      // if a rule module throws, log it but don't block the request
-      // we'd rather let a request through than crash the pipeline
       logger.error('Rule module error', { rule: rule.RULE_ID, error: err.message });
     }
   }
@@ -203,7 +167,6 @@ function matchCustomRule(req, ip, rule) {
       target = req.headers?.['user-agent'] || '';
       break;
     case 'header':
-      // value format: "Header-Name: pattern"
       const parts = rule.value.split(':');
       if (parts.length >= 2) {
         const headerName = parts[0].trim().toLowerCase();
@@ -274,8 +237,6 @@ function parseQuery(url) {
   }
   return params;
 }
-
-// force cache refresh (called when rules/IPs are updated via API)
 function invalidateCache() {
   lastCacheRefresh = 0;
 }

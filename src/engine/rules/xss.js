@@ -1,37 +1,22 @@
-// src/engine/rules/xss.js
-// Cross-site scripting (XSS) detection
-//
-// XSS is tricky because there are so many ways to inject scripts.
-// We check for the obvious stuff (script tags, event handlers, javascript: URIs)
-// and also handle common encoding tricks (hex, unicode, HTML entities).
-
 const RULE_ID = 'xss';
 const RULE_NAME = 'Cross-Site Scripting';
-
-// direct script injection patterns
 const SCRIPT_PATTERNS = [
   /<script[\s>]/i,
   /<\/script>/i,
   /<script\b[^>]*>[\s\S]*?<\/script>/i,
 ];
-
-// event handler injection — these are the big ones
 const EVENT_HANDLERS = [
   /\bon\w+\s*=\s*['"]/i,           // onload="..." onerror="..." etc
   /\bon(load|error|click|mouseover|mouseout|focus|blur|submit|change|input|keydown|keyup|keypress)\s*=/i,
   /\bon(abort|beforeunload|hashchange|message|offline|online|pagehide|pageshow|popstate|resize|scroll|unload)\s*=/i,
   /\bon(animationstart|animationend|animationiteration|transitionend)\s*=/i,
 ];
-
-// javascript: URI scheme
 const JS_URI_PATTERNS = [
   /javascript\s*:/i,
   /vbscript\s*:/i,
   /data\s*:\s*text\/html/i,
   /data\s*:\s*application\/x?html/i,
 ];
-
-// dangerous HTML tags that can execute code
 const DANGEROUS_TAGS = [
   /<iframe[\s>]/i,
   /<embed[\s>]/i,
@@ -50,8 +35,6 @@ const DANGEROUS_TAGS = [
   /<audio[\s][^>]*onerror/i,
   /<source[\s][^>]*onerror/i,
 ];
-
-// expression/eval patterns
 const EVAL_PATTERNS = [
   /\beval\s*\(/i,
   /\bsetTimeout\s*\(\s*['"`]/i,
@@ -66,8 +49,6 @@ const EVAL_PATTERNS = [
   /\.outerHTML\s*=/i,
   /\.insertAdjacentHTML\s*\(/i,
 ];
-
-// encoding bypass attempts
 const ENCODING_PATTERNS = [
   /&#x?[0-9a-f]+;/i,       // HTML entities (&#60; &#x3c;)
   /\\u[0-9a-f]{4}/i,        // Unicode escapes (\u003c)
@@ -83,42 +64,29 @@ function check(req) {
 
   for (const { source, value } of targets) {
     if (!value || value.length < 3) continue;
-
-    // decode the value first so we catch encoded attacks
     const decoded = fullyDecode(value);
-
-    // check script tags
     for (const pattern of SCRIPT_PATTERNS) {
       if (pattern.test(decoded)) {
         return hit(source, decoded, 'Script tag injection', 'high');
       }
     }
-
-    // check event handlers
     for (const pattern of EVENT_HANDLERS) {
       if (pattern.test(decoded)) {
         return hit(source, decoded, 'Event handler injection', 'high');
       }
     }
-
-    // check javascript: URIs
     for (const pattern of JS_URI_PATTERNS) {
       if (pattern.test(decoded)) {
         return hit(source, decoded, 'JavaScript URI injection', 'high');
       }
     }
-
-    // check dangerous tags
     for (const pattern of DANGEROUS_TAGS) {
       if (pattern.test(decoded)) {
         return hit(source, decoded, 'Dangerous HTML tag', 'medium');
       }
     }
-
-    // check eval/DOM manipulation
     for (const pattern of EVAL_PATTERNS) {
       if (pattern.test(decoded)) {
-        // only flag if there's also HTML-like content (reduce false positives)
         if (/<[a-z]/i.test(decoded) || /['"]/.test(decoded)) {
           return hit(source, decoded, 'DOM manipulation attempt', 'medium');
         }
@@ -142,8 +110,6 @@ function hit(source, value, detail, severity) {
 
 function fullyDecode(str) {
   let decoded = str;
-
-  // URL decode (handle double encoding)
   for (let i = 0; i < 2; i++) {
     try {
       const next = decodeURIComponent(decoded);
@@ -151,16 +117,12 @@ function fullyDecode(str) {
       decoded = next;
     } catch { break; }
   }
-
-  // HTML entity decode (basic)
   decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (_, hex) => 
     String.fromCharCode(parseInt(hex, 16))
   );
   decoded = decoded.replace(/&#(\d+);/g, (_, dec) => 
     String.fromCharCode(parseInt(dec, 10))
   );
-
-  // common HTML entities
   decoded = decoded.replace(/&lt;/gi, '<');
   decoded = decoded.replace(/&gt;/gi, '>');
   decoded = decoded.replace(/&amp;/gi, '&');
@@ -188,7 +150,6 @@ function collectTargets(req) {
   if (req.headers?.cookie) {
     targets.push({ source: 'cookie', value: req.headers.cookie });
   }
-  // also check referer — reflected XSS sometimes comes through here
   if (req.headers?.referer) {
     targets.push({ source: 'referer', value: req.headers.referer });
   }

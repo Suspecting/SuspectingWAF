@@ -1,6 +1,3 @@
-/* dashboard/css/charts.css */
-/* simple light theme charts */
-
 .chart-container {
   width: 100%;
   height: 250px;
@@ -90,7 +87,6 @@
 .recent-attack-rule { flex: 1; color: var(--text-primary); }
 .recent-attack-ip { font-family: monospace; color: var(--text-secondary); }
 
-/* Update pagination for light mode */
 .pagination {
   display: flex;
   justify-content: space-between;
@@ -116,7 +112,6 @@
 .page-btn:hover:not(:disabled) { border-color: var(--green); color: var(--green); }
 .page-btn:disabled { color: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
 
-/* pagination container */
 #paginationContainer {
   background: #fff;
   border: 1px solid var(--border-default);

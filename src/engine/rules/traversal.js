@@ -1,7 +1,3 @@
-// src/engine/rules/traversal.js
-// path traversal / directory traversal detection
-// catches ../ sequences and access to sensitive system files
-
 const RULE_ID = 'traversal';
 const RULE_NAME = 'Path Traversal';
 
@@ -18,8 +14,6 @@ const TRAVERSAL_SEQUENCES = [
   /\.\.\%c1%9c/i,
   /\.\.%255c/i,
 ];
-
-// sensitive files that are commonly targeted
 const SENSITIVE_FILES = [
   /\/etc\/passwd/i,
   /\/etc\/shadow/i,
@@ -49,8 +43,6 @@ const SENSITIVE_FILES = [
 function check(req) {
   const url = req.url || '';
   const decoded = decodeURISafe(decodeURISafe(url)); // double decode
-
-  // check traversal sequences in URL
   for (const pattern of TRAVERSAL_SEQUENCES) {
     if (pattern.test(decoded) || pattern.test(url)) {
       return {
@@ -61,8 +53,6 @@ function check(req) {
       };
     }
   }
-
-  // check for sensitive file access
   for (const pattern of SENSITIVE_FILES) {
     if (pattern.test(decoded) || pattern.test(url)) {
       return {
@@ -73,8 +63,6 @@ function check(req) {
       };
     }
   }
-
-  // also check query params and body
   const params = getAllParams(req);
   for (const { source, value } of params) {
     if (!value || value.length < 3) continue;

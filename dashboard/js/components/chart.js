@@ -1,6 +1,3 @@
-// dashboard/js/components/chart.js
-// simple canvas-based charts so we don't need heavy dependencies like Chart.js
-
 class SimpleChart {
   constructor(canvas, options = {}) {
     this.canvas = canvas;
@@ -15,8 +12,6 @@ class SimpleChart {
       data: [],   // y-axis data
       ...options
     };
-    
-    // handle resize
     this.resizeHandler = () => this.draw();
     window.addEventListener('resize', this.resizeHandler);
   }
@@ -36,8 +31,6 @@ class SimpleChart {
     const { data, type, color, fillColor, lineWidth, padding } = options;
 
     if (!data || data.length === 0) return;
-
-    // ensure canvas resolution matches display size
     const rect = canvas.parentElement.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -62,14 +55,11 @@ class SimpleChart {
         const barH = (val / max) * graphH;
         const x = padding + (i * (barW + gap)) + (gap / 2);
         const y = h - padding - barH;
-        
-        // draw bar
         ctx.beginPath();
         ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
         ctx.fill();
       });
     } else {
-      // line chart
       const stepX = graphW / (data.length - 1 || 1);
       
       ctx.beginPath();
@@ -86,8 +76,6 @@ class SimpleChart {
       });
       
       ctx.stroke();
-
-      // fill
       if (fillColor) {
         ctx.lineTo(w - padding, h - padding);
         ctx.lineTo(padding, h - padding);
@@ -95,8 +83,6 @@ class SimpleChart {
         ctx.fill();
       }
     }
-
-    // draw max value label
     ctx.fillStyle = '#8b949e';
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'right';

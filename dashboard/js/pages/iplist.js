@@ -1,6 +1,3 @@
-// dashboard/js/pages/iplist.js
-// IP Blocklist and Allowlist
-
 const IpListPage = {
   currentTab: 'block', // 'block' or 'allow'
 
@@ -14,8 +11,6 @@ const IpListPage = {
       className: `btn ${this.currentTab === 'block' ? 'btn-danger' : 'btn-success'}`,
       onclick: () => this.showAddModal()
     }, `➕ Add IP to ${this.currentTab === 'block' ? 'Blocklist' : 'Allowlist'}`);
-    
-    // Tabs
     const tabs = h('div', { className: 'flex gap-md mb-md' }, [
       h('button', { 
         className: `btn ${this.currentTab === 'block' ? 'btn-secondary' : 'btn-ghost'}`,

@@ -1,15 +1,6 @@
-// src/utils/ip.js
-// IP address utilities — parsing, CIDR matching, internal range checks
-// used by the detection engine and the IP blocklist/allowlist
-
 const net = require('net');
 
-/**
- * parse an IP from a request, handling proxied connections
- * checks x-forwarded-for, x-real-ip, then falls back to socket address
- */
 function getClientIp(req) {
-  // x-forwarded-for can have multiple IPs: client, proxy1, proxy2
   const xff = req.headers['x-forwarded-for'];
   if (xff) {
     const first = xff.split(',')[0].trim();
@@ -18,30 +9,20 @@ function getClientIp(req) {
 
   const xri = req.headers['x-real-ip'];
   if (xri && net.isIP(xri)) return xri;
-
-  // fallback to socket
   let addr = req.socket?.remoteAddress || '0.0.0.0';
-  // strip ipv6 prefix if it's actually ipv4
   if (addr.startsWith('::ffff:')) {
     addr = addr.slice(7);
   }
   return addr;
 }
 
-/**
- * check if an IP is in a CIDR range
- * supports both IPv4 and basic IPv4-mapped IPv6
- */
 function isIpInCidr(ip, cidr) {
-  // handle plain IP (no mask) as /32
   if (!cidr.includes('/')) {
     return ip === cidr;
   }
 
   const [range, bits] = cidr.split('/');
   const mask = parseInt(bits, 10);
-
-  // only handle ipv4 for now
   const ipNum = ipToNumber(ip);
   const rangeNum = ipToNumber(range);
 
@@ -51,11 +32,7 @@ function isIpInCidr(ip, cidr) {
   return (ipNum & maskBits) === (rangeNum & maskBits);
 }
 
-/**
- * convert dotted IPv4 to a 32-bit number
- */
 function ipToNumber(ip) {
-  // strip ipv6 prefix
   if (ip.startsWith('::ffff:')) ip = ip.slice(7);
 
   const parts = ip.split('.');
@@ -70,10 +47,6 @@ function ipToNumber(ip) {
   return num >>> 0; // unsigned
 }
 
-/**
- * check if an IP is in a private/internal range
- * used by SSRF detection
- */
 function isInternalIp(ip) {
   if (ip.startsWith('::ffff:')) ip = ip.slice(7);
 
@@ -89,17 +62,11 @@ function isInternalIp(ip) {
   for (const range of internalRanges) {
     if (isIpInCidr(ip, range)) return true;
   }
-
-  // also check for localhost hostnames
   if (ip === 'localhost' || ip === '::1') return true;
 
   return false;
 }
 
-/**
- * check if an IP matches any entry in a list
- * entries can be plain IPs or CIDR ranges
- */
 function isIpInList(ip, list) {
   for (const entry of list) {
     if (isIpInCidr(ip, entry)) return true;

@@ -1,10 +1,4 @@
-// src/db/queries.js
-// pre-built query functions so we're not writing raw SQL everywhere
-// each function gets a fresh db handle from the connection pool
-
 const { getDb } = require('./connection');
-
-// ---- SITES ----
 
 function getAllSites() {
   return getDb().prepare(`
@@ -49,8 +43,6 @@ function updateSite(id, fields) {
 function deleteSite(id) {
   return getDb().prepare('DELETE FROM sites WHERE id = ?').run(id);
 }
-
-// ---- ATTACK LOGS ----
 
 function getAttackLogs({ page = 1, limit = 50, site_id, rule_id, severity, src_ip, startDate, endDate } = {}) {
   let where = [];
@@ -102,8 +94,6 @@ function insertAttackLog(log) {
   );
 }
 
-// ---- CUSTOM RULES ----
-
 function getCustomRules() {
   return getDb().prepare('SELECT * FROM custom_rules ORDER BY priority DESC, created_at DESC').all();
 }
@@ -140,8 +130,6 @@ function updateCustomRule(id, fields) {
 function deleteCustomRule(id) {
   return getDb().prepare('DELETE FROM custom_rules WHERE id = ?').run(id);
 }
-
-// ---- IP LIST ----
 
 function getIpList(type) {
   let query = 'SELECT * FROM ip_list';
@@ -181,8 +169,6 @@ function removeIpFromList(id) {
   return getDb().prepare('DELETE FROM ip_list WHERE id = ?').run(id);
 }
 
-// ---- CERTIFICATES ----
-
 function getCertificates() {
   return getDb().prepare('SELECT * FROM certificates ORDER BY created_at DESC').all();
 }
@@ -202,8 +188,6 @@ function createCertificate({ name, domain, cert_path, key_path, expires_at }) {
 function deleteCertificate(id) {
   return getDb().prepare('DELETE FROM certificates WHERE id = ?').run(id);
 }
-
-// ---- RATE LIMITS ----
 
 function getRateLimits() {
   return getDb().prepare(`
@@ -229,8 +213,6 @@ function upsertRateLimit({ site_id, requests_per_second, burst, ban_duration, en
     `).run(site_id, requests_per_second, burst, ban_duration, enabled ? 1 : 0);
   }
 }
-
-// ---- STATS ----
 
 function getOverviewStats(hours = 24) {
   const since = new Date(Date.now() - hours * 3600 * 1000).toISOString();
@@ -260,7 +242,6 @@ function getOverviewStats(hours = 24) {
 
 function getTimeseries(hours = 24) {
   const since = new Date(Date.now() - hours * 3600 * 1000).toISOString();
-  // group by hour
   return getDb().prepare(`
     SELECT 
       strftime('%Y-%m-%dT%H:00:00', timestamp) as hour,
@@ -272,8 +253,6 @@ function getTimeseries(hours = 24) {
     ORDER BY hour ASC
   `).all(since);
 }
-
-// ---- SETTINGS ----
 
 function getSettings() {
   const rows = getDb().prepare('SELECT * FROM settings').all();
@@ -294,8 +273,6 @@ function setSetting(key, value) {
   `).run(key, value, value);
 }
 
-// ---- USERS ----
-
 function getUserByUsername(username) {
   return getDb().prepare('SELECT * FROM users WHERE username = ?').get(username);
 }
@@ -313,22 +290,13 @@ function updateUserPassword(id, hash) {
 }
 
 module.exports = {
-  // sites
   getAllSites, getSiteById, createSite, updateSite, deleteSite,
-  // logs
   getAttackLogs, getAttackLogById, insertAttackLog,
-  // rules
   getCustomRules, getEnabledCustomRules, createCustomRule, updateCustomRule, deleteCustomRule,
-  // ip list
   getIpList, getActiveBlockedIps, getActiveAllowedIps, addIpToList, removeIpFromList,
-  // certs
   getCertificates, getCertById, createCertificate, deleteCertificate,
-  // rate limits
   getRateLimits, getRateLimitForSite, upsertRateLimit,
-  // stats
   getOverviewStats, getTimeseries,
-  // settings
   getSettings, getSetting, setSetting,
-  // users
   getUserByUsername, getUserById, updateUserLogin, updateUserPassword,
 };

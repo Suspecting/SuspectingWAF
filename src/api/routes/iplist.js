@@ -1,11 +1,8 @@
-// src/api/routes/iplist.js
 const express = require('express');
 const router = express.Router();
 const queries = require('../../db/queries');
 const { invalidateCache } = require('../../engine/inspector');
 const { requireFields, validateId } = require('../middleware/validate');
-
-// GET /api/v1/iplist
 router.get('/', (req, res) => {
   try {
     const type = req.query.type; // 'block' or 'allow' or undefined for all
@@ -15,8 +12,6 @@ router.get('/', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// POST /api/v1/iplist
 router.post('/', requireFields('ip', 'type'), (req, res) => {
   try {
     if (!['block', 'allow'].includes(req.body.type)) {
@@ -29,8 +24,6 @@ router.post('/', requireFields('ip', 'type'), (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// DELETE /api/v1/iplist/:id
 router.delete('/:id', validateId, (req, res) => {
   try {
     queries.removeIpFromList(req.params.id);

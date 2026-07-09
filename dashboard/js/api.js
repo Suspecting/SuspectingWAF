@@ -1,6 +1,3 @@
-// dashboard/js/api.js
-// API client wrapper
-
 class APIClient {
   constructor(baseUrl = '/api/v1') {
     this.baseUrl = baseUrl;
@@ -34,8 +31,6 @@ class APIClient {
 
     try {
       const res = await fetch(url, config);
-      
-      // Handle 401 Unauthorized globally
       if (res.status === 401 && endpoint !== '/auth/login') {
         window.Auth.logout();
         return;

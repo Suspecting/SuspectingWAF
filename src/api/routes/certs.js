@@ -1,4 +1,3 @@
-// src/api/routes/certs.js
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
@@ -7,8 +6,6 @@ const queries = require('../../db/queries');
 const config = require('../../utils/config');
 const { clearCertCache } = require('../../proxy/ssl');
 const { validateId } = require('../middleware/validate');
-
-// GET /api/v1/certs
 router.get('/', (req, res) => {
   try {
     const certs = queries.getCertificates();
@@ -17,8 +14,6 @@ router.get('/', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// POST /api/v1/certs — upload cert + key as JSON (base64 or raw PEM)
 router.post('/', (req, res) => {
   try {
     const { name, domain, cert_content, key_content } = req.body;
@@ -29,8 +24,6 @@ router.post('/', (req, res) => {
     const certsDir = path.join(config.dataDir, 'certs');
     const certPath = path.join(certsDir, `${domain}.crt`);
     const keyPath = path.join(certsDir, `${domain}.key`);
-
-    // write cert and key files
     fs.writeFileSync(certPath, cert_content);
     fs.writeFileSync(keyPath, key_content);
 
@@ -42,14 +35,10 @@ router.post('/', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// DELETE /api/v1/certs/:id
 router.delete('/:id', validateId, (req, res) => {
   try {
     const cert = queries.getCertById(req.params.id);
     if (!cert) return res.status(404).json({ error: 'Certificate not found' });
-
-    // delete files
     try {
       if (cert.cert_path && fs.existsSync(cert.cert_path)) fs.unlinkSync(cert.cert_path);
       if (cert.key_path && fs.existsSync(cert.key_path)) fs.unlinkSync(cert.key_path);

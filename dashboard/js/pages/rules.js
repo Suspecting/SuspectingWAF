@@ -1,6 +1,3 @@
-// dashboard/js/pages/rules.js
-// Custom Rules page
-
 const RulesPage = {
   async render() {
     const { h } = DOM;
@@ -155,8 +152,6 @@ const RulesPage = {
           };
           
           if (!data.name || !data.value) return Toast.error('Please fill required fields');
-          
-          // minor validation
           if (data.field === 'header' && !data.value.includes(':')) {
             return Toast.error('Header value must be format "Header-Name: value"');
           }
@@ -172,8 +167,6 @@ const RulesPage = {
     }, 'Create Rule');
 
     Modal.show('Create Custom Rule', html, saveBtn);
-
-    // Dynamic help text
     document.getElementById('ruleField').addEventListener('change', (e) => {
       const v = e.target.value;
       const h = document.getElementById('ruleHelp');

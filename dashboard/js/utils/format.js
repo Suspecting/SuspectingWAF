@@ -1,6 +1,3 @@
-// dashboard/js/utils/format.js
-// formatting dates, numbers, etc.
-
 function formatDate(isoString) {
   if (!isoString) return 'Never';
   const date = new Date(isoString);

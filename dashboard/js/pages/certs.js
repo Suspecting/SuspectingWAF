@@ -1,6 +1,3 @@
-// dashboard/js/pages/certs.js
-// SSL Certificates page
-
 const CertsPage = {
   async render() {
     const { h } = DOM;

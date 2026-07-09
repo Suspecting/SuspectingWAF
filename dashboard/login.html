@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login - SuspectingWAF</title>
   <style>
-    /* SafeLine-style Light Theme Reset & Base */
+    
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
@@ -21,7 +21,7 @@
       align-items: center;
     }
     
-    /* Top Error Toast (matching screenshot) */
+    
     .top-toast {
       position: absolute;
       top: 40px;
@@ -57,7 +57,7 @@
       font-weight: bold;
     }
 
-    /* Login Card */
+    
     .login-wrapper {
       background: #ffffff;
       width: 420px;
@@ -66,7 +66,7 @@
       padding: 32px 40px 40px 40px;
     }
 
-    /* Header */
+    
     .login-header {
       display: flex;
       justify-content: space-between;
@@ -83,7 +83,7 @@
       color: #909399;
     }
 
-    /* Form Fields */
+    
     .form-item {
       position: relative;
       margin-bottom: 24px;
@@ -99,10 +99,10 @@
       border-color: #14988d;
     }
     .input-wrapper.filled {
-      background: #f0f8ff; /* Light blue tint for autofill/filled state like screenshot */
+      background: #f0f8ff; 
     }
     
-    /* Legend/Label inside border */
+    
     .input-label {
       position: absolute;
       top: -8px;
@@ -134,7 +134,7 @@
       cursor: pointer;
     }
 
-    /* Button */
+    
     .login-btn {
       width: 100%;
       background-color: #14988d;
@@ -157,7 +157,7 @@
       cursor: not-allowed;
     }
 
-    /* Footer Links */
+    
     .login-footer {
       display: flex;
       justify-content: space-between;
@@ -176,7 +176,7 @@
 </head>
 <body>
 
-  <!-- Top Toast Error -->
+  
   <div class="top-toast" id="errorToast">
     <div class="toast-icon">!</div>
     <span id="errorMsg">Username and password not match</span>
@@ -201,7 +201,7 @@
         <div class="input-wrapper" id="passWrapper">
           <input type="password" id="password" name="password" class="input-field" autocomplete="current-password" required>
           <div class="eye-icon" id="togglePassword">
-            <!-- simple SVG eye icon -->
+            
             <svg viewBox="0 0 1024 1024" width="16" height="16" fill="currentColor">
               <path d="M512 256C256 256 70.2 463.5 13.9 497.1a32 32 0 0 0 0 29.8C70.2 560.5 256 768 512 768s441.8-207.5 498.1-241.1a32 32 0 0 0 0-29.8C953.8 463.5 768 256 512 256zm0 448c-205.2 0-366.1-155.3-431-192 64.8-36.7 225.8-192 431-192s366.1 155.3 431 192c-64.9 36.7-225.8 192-431 192z"></path>
               <path d="M512 384c-70.6 0-128 57.4-128 128s57.4 128 128 128 128-57.4 128-128-57.4-128-128-128zm0 192c-35.3 0-64-28.7-64-64s28.7-64 64-64 64 28.7 64 64-28.7 64-64 64z"></path>
@@ -220,7 +220,6 @@
   </div>
 
   <script>
-    // redirect if logged in
     if (localStorage.getItem('swaf_token')) {
       window.location.href = '/dashboard/';
     }
@@ -229,8 +228,6 @@
     const toast = document.getElementById('errorToast');
     const errorMsg = document.getElementById('errorMsg');
     const loginBtn = document.getElementById('loginBtn');
-    
-    // UI interactions
     const userInp = document.getElementById('username');
     const passInp = document.getElementById('password');
     const userWrap = document.getElementById('userWrapper');
@@ -243,8 +240,6 @@
 
     userInp.addEventListener('input', updateFilledState);
     passInp.addEventListener('input', updateFilledState);
-
-    // Password visibility toggle
     document.getElementById('togglePassword').addEventListener('click', () => {
       const type = passInp.getAttribute('type') === 'password' ? 'text' : 'password';
       passInp.setAttribute('type', type);

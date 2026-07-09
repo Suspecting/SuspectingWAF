@@ -1,6 +1,3 @@
-// dashboard/js/pages/settings.js
-// Global WAF settings
-
 const SettingsPage = {
   async render() {
     DOM.empty(document.getElementById('pageActions'));

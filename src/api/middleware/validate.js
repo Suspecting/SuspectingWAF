@@ -1,7 +1,3 @@
-// src/api/middleware/validate.js
-// basic input validation helpers
-// nothing fancy, just guards against missing fields and bad types
-
 function requireFields(...fields) {
   return (req, res, next) => {
     const missing = fields.filter(f => req.body[f] === undefined || req.body[f] === null || req.body[f] === '');

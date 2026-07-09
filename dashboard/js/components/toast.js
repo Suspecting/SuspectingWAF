@@ -1,6 +1,3 @@
-// dashboard/js/components/toast.js
-// toast notification system
-
 const Toast = {
   show(message, type = 'info', duration = 4000) {
     const container = document.getElementById('toastContainer');
@@ -19,15 +16,11 @@ const Toast = {
       <div class="toast-message">${DOM.escapeHTML(message)}</div>
       <div class="toast-dismiss">✕</div>
     `;
-
-    // dismiss button
     toast.querySelector('.toast-dismiss').addEventListener('click', () => {
       this.remove(toast);
     });
 
     container.appendChild(toast);
-
-    // auto remove
     if (duration > 0) {
       setTimeout(() => {
         this.remove(toast);

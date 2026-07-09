@@ -1,7 +1,3 @@
-// src/engine/rules/xxe.js
-// XML External Entity injection detection
-// blocks DTD declarations with ENTITY, SYSTEM, PUBLIC references
-
 const RULE_ID = 'xxe';
 const RULE_NAME = 'XML External Entity';
 
@@ -18,14 +14,9 @@ const XXE_PATTERNS = [
 ];
 
 function check(req) {
-  // XXE only applies to requests with XML content
   const ct = (req.headers?.['content-type'] || '').toLowerCase();
   const isXml = ct.includes('xml') || ct.includes('soap');
-
-  // check body regardless — some apps accept XML without proper content-type
   const body = typeof req.body === 'string' ? req.body : '';
-
-  // skip if no XML-like content
   if (!isXml && !body.includes('<?xml') && !body.includes('<!DOCTYPE')) {
     return { blocked: false };
   }
@@ -40,8 +31,6 @@ function check(req) {
       };
     }
   }
-
-  // also check URL params — sometimes XML is passed as query param
   if (req.url) {
     let decoded;
     try { decoded = decodeURIComponent(req.url); } catch { decoded = req.url; }

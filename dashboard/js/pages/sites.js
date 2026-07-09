@@ -1,11 +1,6 @@
-// dashboard/js/pages/sites.js
-// Site management page
-
 const SitesPage = {
   async render() {
     const { h } = DOM;
-    
-    // setup actions (add button)
     const actionsEl = document.getElementById('pageActions');
     DOM.empty(actionsEl);
     
@@ -14,8 +9,6 @@ const SitesPage = {
       onclick: () => this.showAddModal()
     }, '➕ Add Site');
     actionsEl.appendChild(addBtn);
-
-    // main container
     const bodyEl = document.getElementById('pageBody');
     bodyEl.innerHTML = `
       <div class="card">

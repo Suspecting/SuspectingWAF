@@ -1,18 +1,10 @@
-// src/proxy/handler.js
-// request interception and forwarding logic
-// this is the glue between the HTTP proxy and the detection engine
-
 const url = require('url');
 const { inspect } = require('../engine/inspector');
 const queries = require('../db/queries');
 const logger = require('../utils/logger');
 const { getClientIp } = require('../utils/ip');
-
-// in-memory request counter for stats
 let requestCount = 0;
 let blockedCount = 0;
-
-// flush stats to db every 60 seconds
 setInterval(() => {
   if (requestCount > 0) {
     try {
@@ -22,17 +14,12 @@ setInterval(() => {
         VALUES (NULL, datetime('now', '-1 minute'), ?, ?, 0)
       `).run(requestCount, blockedCount);
     } catch (err) {
-      // not critical, just stats
     }
     requestCount = 0;
     blockedCount = 0;
   }
 }, 60000);
 
-/**
- * handle an incoming proxied request
- * returns the upstream target if allowed, or null if blocked
- */
 function handleRequest(req, res) {
   requestCount++;
 
@@ -40,14 +27,10 @@ function handleRequest(req, res) {
   const site = findSiteForRequest(host, req.socket?.localPort);
 
   if (!site) {
-    // no site configured for this host — return 404
     res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(getNotFoundPage());
     return null;
   }
-
-  // collect body data for inspection (only for POST/PUT/PATCH)
-  // for GET requests we just inspect the URL and headers
   const result = inspect(req, site);
 
   if (result.blocked) {
@@ -57,8 +40,6 @@ function handleRequest(req, res) {
       ip, method: req.method, url: req.url,
       rule: result.rule, detail: result.detail,
     });
-
-    // rate limit has a special response
     if (result.retryAfter) {
       res.writeHead(429, {
         'Content-Type': 'text/html; charset=utf-8',
@@ -74,32 +55,22 @@ function handleRequest(req, res) {
   return site;
 }
 
-/**
- * find which configured site matches this request
- * matching logic: check host header against server_names, then listen_port
- */
 function findSiteForRequest(host, port) {
   const sites = queries.getAllSites();
   const hostname = host.split(':')[0]; // strip port from host header
 
   for (const site of sites) {
     if (site.status !== 'active') continue;
-
-    // check server_names (comma-separated list)
     const serverNames = (site.server_names || '').split(',').map(s => s.trim()).filter(Boolean);
     if (serverNames.length > 0) {
       if (serverNames.includes(hostname) || serverNames.includes(host)) {
         return site;
       }
     }
-
-    // check listen_port
     if (port && site.listen_port === port) {
       return site;
     }
   }
-
-  // fallback: return the first active site (catch-all)
   return sites.find(s => s.status === 'active') || null;
 }
 

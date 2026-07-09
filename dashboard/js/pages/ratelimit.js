@@ -1,6 +1,3 @@
-// dashboard/js/pages/ratelimit.js
-// Rate limit config page
-
 const RateLimitPage = {
   sites: [],
   limits: [],
@@ -66,12 +63,8 @@ const RateLimitPage = {
   renderTable() {
     const container = document.getElementById('tableContainer');
     DOM.empty(container);
-
-    // map limits by site_id for easy lookup
     const limitsMap = {};
     this.limits.forEach(l => limitsMap[l.site_id] = l);
-
-    // build data based on all sites (even if they don't have a specific limit entry yet)
     const data = this.sites.map(site => {
       const l = limitsMap[site.id];
       return {

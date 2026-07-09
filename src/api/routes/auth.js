@@ -1,11 +1,8 @@
-// src/api/routes/auth.js
 const express = require('express');
 const router = express.Router();
 const { verifyPassword, generateToken, hashPassword } = require('../../utils/crypto');
 const queries = require('../../db/queries');
 const logger = require('../../utils/logger');
-
-// POST /api/v1/auth/login
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -34,13 +31,9 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-// GET /api/v1/auth/me
 router.get('/me', (req, res) => {
   res.json({ user: req.user });
 });
-
-// PUT /api/v1/auth/password
 router.put('/password', async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;

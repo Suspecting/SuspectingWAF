@@ -1,13 +1,7 @@
-// src/engine/rules/ssrf.js
-// Server-Side Request Forgery detection
-// blocks requests that try to make the server access internal resources
-
 const RULE_ID = 'ssrf';
 const RULE_NAME = 'Server-Side Request Forgery';
 
 const { isInternalIp } = require('../../utils/ip');
-
-// URL patterns pointing to internal resources
 const INTERNAL_URL_PATTERNS = [
   /https?:\/\/127\./i,
   /https?:\/\/0\./i,
@@ -20,16 +14,12 @@ const INTERNAL_URL_PATTERNS = [
   /https?:\/\/metadata\.google/i,        // GCP metadata
   /https?:\/\/100\.100\.100\.200/i,      // Alibaba metadata
 ];
-
-// cloud metadata endpoints
 const METADATA_PATTERNS = [
   /169\.254\.169\.254/,                   // AWS/Azure metadata
   /metadata\.google\.internal/i,          // GCP
   /metadata\.google\.com/i,
   /100\.100\.100\.200/,                   // Alibaba Cloud
 ];
-
-// dangerous schemes
 const DANGEROUS_SCHEMES = [
   /^file:\/\//i,
   /^gopher:\/\//i,
@@ -56,8 +46,6 @@ function check(req) {
     if (!value || value.length < 5) continue;
     let decoded;
     try { decoded = decodeURIComponent(value); } catch { decoded = value; }
-
-    // check for internal URLs
     for (const pattern of INTERNAL_URL_PATTERNS) {
       if (pattern.test(decoded)) {
         return {
@@ -68,8 +56,6 @@ function check(req) {
         };
       }
     }
-
-    // cloud metadata
     for (const pattern of METADATA_PATTERNS) {
       if (pattern.test(decoded)) {
         return {
@@ -80,8 +66,6 @@ function check(req) {
         };
       }
     }
-
-    // dangerous URI schemes
     for (const pattern of DANGEROUS_SCHEMES) {
       if (pattern.test(decoded)) {
         return {

@@ -1,6 +1,3 @@
-// dashboard/js/components/sidebar.js
-// renders the sidebar navigation
-
 const Sidebar = {
   render() {
     const el = document.getElementById('sidebar');

@@ -1,6 +1,3 @@
-// dashboard/js/components/table.js
-// simple data table builder
-
 class DataTable {
   constructor({ columns, data, emptyText = 'No data available', onRowClick = null }) {
     this.columns = columns; // array of { key, label, render(val, row) }
@@ -18,15 +15,11 @@ class DataTable {
         h('div', {}, this.emptyText)
       ]);
     }
-
-    // thead
     const thead = h('thead', {}, [
       h('tr', {}, this.columns.map(col => 
         h('th', {}, col.label)
       ))
     ]);
-
-    // tbody
     const tbody = h('tbody', {}, this.data.map((row, idx) => {
       const tr = h('tr', { 
         style: this.onRowClick ? 'cursor: pointer' : '' 
@@ -45,7 +38,6 @@ class DataTable {
 
       if (this.onRowClick) {
         tr.addEventListener('click', (e) => {
-          // ignore clicks on buttons/links inside the row
           if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.closest('button')) {
             return;
           }

@@ -1,6 +1,3 @@
-// dashboard/js/auth.js
-// auth state management
-
 const Auth = {
   getToken() {
     return localStorage.getItem('swaf_token');

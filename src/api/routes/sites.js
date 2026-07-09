@@ -1,10 +1,7 @@
-// src/api/routes/sites.js
 const express = require('express');
 const router = express.Router();
 const queries = require('../../db/queries');
 const { requireFields, validateId } = require('../middleware/validate');
-
-// GET /api/v1/sites
 router.get('/', (req, res) => {
   try {
     const sites = queries.getAllSites();
@@ -13,8 +10,6 @@ router.get('/', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// GET /api/v1/sites/:id
 router.get('/:id', validateId, (req, res) => {
   try {
     const site = queries.getSiteById(req.params.id);
@@ -24,8 +19,6 @@ router.get('/:id', validateId, (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// POST /api/v1/sites
 router.post('/', requireFields('name', 'upstream_url'), (req, res) => {
   try {
     const site = queries.createSite({
@@ -42,8 +35,6 @@ router.post('/', requireFields('name', 'upstream_url'), (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// PUT /api/v1/sites/:id
 router.put('/:id', validateId, (req, res) => {
   try {
     const existing = queries.getSiteById(req.params.id);
@@ -56,8 +47,6 @@ router.put('/:id', validateId, (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// DELETE /api/v1/sites/:id
 router.delete('/:id', validateId, (req, res) => {
   try {
     const existing = queries.getSiteById(req.params.id);

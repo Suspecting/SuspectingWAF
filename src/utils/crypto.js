@@ -1,7 +1,3 @@
-// src/utils/crypto.js
-// password hashing and token generation
-// using bcryptjs because it's pure JS (no native build issues in docker)
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
@@ -30,7 +26,6 @@ function verifyToken(token) {
 }
 
 function generateApiKey() {
-  // format: swaf_xxxx_xxxx_xxxx
   const id = randomUUID().replace(/-/g, '');
   return `swaf_${id.slice(0, 8)}_${id.slice(8, 16)}_${id.slice(16, 24)}`;
 }

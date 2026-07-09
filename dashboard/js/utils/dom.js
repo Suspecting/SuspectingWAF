@@ -1,10 +1,5 @@
-// dashboard/js/utils/dom.js
-// basic DOM helpers so we don't have to write document.querySelector everywhere
-
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
-
-// create an element with attributes and children
 function h(tag, attrs = {}, children = []) {
   const el = document.createElement(tag);
   
@@ -21,8 +16,6 @@ function h(tag, attrs = {}, children = []) {
       el.setAttribute(key, val);
     }
   }
-
-  // append children (can be strings or nodes)
   const append = (child) => {
     if (Array.isArray(child)) {
       child.forEach(append);
@@ -40,15 +33,11 @@ function h(tag, attrs = {}, children = []) {
   }
   return el;
 }
-
-// clear all children from an element
 function empty(el) {
   while (el.firstChild) {
     el.removeChild(el.firstChild);
   }
 }
-
-// simple HTML sanitizer to prevent XSS in the dashboard itself
 function escapeHTML(str) {
   if (!str) return '';
   const div = document.createElement('div');

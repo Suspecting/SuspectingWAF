@@ -1,12 +1,5 @@
-// src/engine/botdetect.js
-// basic bot detection based on User-Agent analysis and request patterns
-// this isn't meant to replace a full bot management solution, but it catches
-// the obvious stuff: empty UAs, known scanner UAs, missing headers
-
 const RULE_ID = 'bot';
 const RULE_NAME = 'Bot Detection';
-
-// known malicious bot/scanner user agents
 const BAD_BOT_PATTERNS = [
   /sqlmap/i,
   /nikto/i,
@@ -42,8 +35,6 @@ const BAD_BOT_PATTERNS = [
   /dotbot/i,
   /mj12bot/i,
 ];
-
-// headers that real browsers always send but bots often don't
 const EXPECTED_BROWSER_HEADERS = [
   'accept',
   'accept-language',
@@ -52,8 +43,6 @@ const EXPECTED_BROWSER_HEADERS = [
 
 function check(req) {
   const ua = req.headers?.['user-agent'] || '';
-
-  // empty user agent — very suspicious
   if (!ua || ua.trim() === '') {
     return {
       blocked: true, rule: RULE_ID, ruleName: RULE_NAME,
@@ -62,8 +51,6 @@ function check(req) {
       payload: '(empty UA)',
     };
   }
-
-  // known bad bots
   for (const pattern of BAD_BOT_PATTERNS) {
     if (pattern.test(ua)) {
       return {
@@ -74,9 +61,6 @@ function check(req) {
       };
     }
   }
-
-  // check for missing browser headers
-  // only flag if the UA claims to be a browser (contains Mozilla)
   if (/Mozilla/i.test(ua)) {
     const missingHeaders = EXPECTED_BROWSER_HEADERS.filter(h => !req.headers?.[h]);
     if (missingHeaders.length >= 2) {

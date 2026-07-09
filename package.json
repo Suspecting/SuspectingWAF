@@ -20,7 +20,7 @@
     "xss",
     "self-hosted"
   ],
-  "author": "SuspectingWAF Contributors",
+  "author": "Prakhar Shakya (GitHub: Suspecting)",
   "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^11.7.0",

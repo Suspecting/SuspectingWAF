@@ -1,13 +1,8 @@
-// dashboard/js/pages/dashboard.js
-// Overview / Dashboard page
-
 const DashboardPage = {
   chart: null,
 
   async render() {
     DOM.empty(document.getElementById('pageActions'));
-    
-    // render skeleton
     document.getElementById('pageBody').innerHTML = `
       <div class="grid grid-4 mb-lg">
         <div class="stat-card">
@@ -78,14 +73,10 @@ const DashboardPage = {
         API.get('/stats/timeseries', { hours: 24 }),
         API.get('/logs', { limit: 6 })
       ]);
-
-      // update cards
       document.getElementById('statTotalReq').textContent = Format.formatNumber(stats.total_attacks * 15); // simulated total for looks
       document.getElementById('statBlocked').textContent = Format.formatNumber(stats.total_attacks);
       document.getElementById('statSites').textContent = stats.active_sites;
       document.getElementById('statIps').textContent = Format.formatNumber(stats.unique_attackers);
-
-      // update chart
       if (ts.data && ts.data.length > 0) {
         const canvas = document.getElementById('trafficChart');
         if (canvas) {
@@ -98,8 +89,6 @@ const DashboardPage = {
           this.chart.draw();
         }
       }
-
-      // update breakdown
       const breakdownEl = document.getElementById('attackBreakdown');
       if (stats.by_rule && stats.by_rule.length > 0) {
         const max = Math.max(...stats.by_rule.map(r => r.count));
@@ -120,8 +109,6 @@ const DashboardPage = {
       } else {
         breakdownEl.innerHTML = '<div class="text-muted">No attack data for this period.</div>';
       }
-
-      // update top IPs
       const ipsEl = document.getElementById('topIpsList');
       if (stats.top_ips && stats.top_ips.length > 0) {
         let html = '';
@@ -138,8 +125,6 @@ const DashboardPage = {
       } else {
         ipsEl.innerHTML = '<div class="p-4 text-center text-muted">No data available.</div>';
       }
-
-      // update recent attacks
       const recentEl = document.getElementById('recentAttacksList');
       if (logs.rows && logs.rows.length > 0) {
         let html = '';

@@ -1,9 +1,6 @@
-// src/api/routes/stats.js
 const express = require('express');
 const router = express.Router();
 const queries = require('../../db/queries');
-
-// GET /api/v1/stats/overview
 router.get('/overview', (req, res) => {
   try {
     const hours = parseInt(req.query.hours) || 24;
@@ -13,8 +10,6 @@ router.get('/overview', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// GET /api/v1/stats/timeseries
 router.get('/timeseries', (req, res) => {
   try {
     const hours = parseInt(req.query.hours) || 24;

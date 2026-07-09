@@ -1,7 +1,3 @@
-// src/db/migrations.js
-// creates all the tables we need on first run
-// idempotent — safe to run multiple times (uses IF NOT EXISTS)
-
 const { getDb } = require('./connection');
 const { hashPassword } = require('../utils/crypto');
 const config = require('../utils/config');
@@ -11,8 +7,6 @@ async function runMigrations() {
   const db = getDb();
 
   logger.info('Running database migrations...');
-
-  // admin users
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,8 +17,6 @@ async function runMigrations() {
       last_login DATETIME
     )
   `);
-
-  // protected sites (upstream backends)
   db.exec(`
     CREATE TABLE IF NOT EXISTS sites (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,8 +32,6 @@ async function runMigrations() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-
-  // attack logs — this is the big one, needs indexes
   db.exec(`
     CREATE TABLE IF NOT EXISTS attack_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,15 +52,11 @@ async function runMigrations() {
       FOREIGN KEY (site_id) REFERENCES sites(id) ON DELETE SET NULL
     )
   `);
-
-  // indexes for attack_logs — queries hit these columns a lot
   db.exec(`CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON attack_logs(timestamp)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_logs_src_ip ON attack_logs(src_ip)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_logs_rule_id ON attack_logs(rule_id)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_logs_site_id ON attack_logs(site_id)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_logs_severity ON attack_logs(severity)`);
-
-  // custom rules (user-defined block/allow)
   db.exec(`
     CREATE TABLE IF NOT EXISTS custom_rules (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,8 +71,6 @@ async function runMigrations() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-
-  // IP blocklist / allowlist
   db.exec(`
     CREATE TABLE IF NOT EXISTS ip_list (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -99,8 +83,6 @@ async function runMigrations() {
   `);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_iplist_ip ON ip_list(ip)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_iplist_type ON ip_list(type)`);
-
-  // SSL certificates
   db.exec(`
     CREATE TABLE IF NOT EXISTS certificates (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,8 +94,6 @@ async function runMigrations() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-
-  // rate limit configuration
   db.exec(`
     CREATE TABLE IF NOT EXISTS rate_limits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -125,8 +105,6 @@ async function runMigrations() {
       FOREIGN KEY (site_id) REFERENCES sites(id) ON DELETE CASCADE
     )
   `);
-
-  // aggregated request stats — filled by a background job
   db.exec(`
     CREATE TABLE IF NOT EXISTS request_stats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,16 +117,12 @@ async function runMigrations() {
     )
   `);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_stats_bucket ON request_stats(bucket)`);
-
-  // global settings (key-value store)
   db.exec(`
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     )
   `);
-
-  // seed default admin user if none exists
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
   if (userCount.count === 0) {
     const hash = await hashPassword(config.adminPass);
@@ -158,8 +132,6 @@ async function runMigrations() {
     );
     logger.info('Created default admin user', { username: config.adminUser });
   }
-
-  // seed default settings
   const settingsCount = db.prepare('SELECT COUNT(*) as count FROM settings').get();
   if (settingsCount.count === 0) {
     const defaults = {
@@ -180,8 +152,6 @@ async function runMigrations() {
 }
 
 module.exports = { runMigrations };
-
-// if run directly: node src/db/migrations.js
 if (require.main === module) {
   runMigrations().then(() => {
     console.log('Done.');

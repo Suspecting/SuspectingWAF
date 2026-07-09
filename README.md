@@ -1,14 +1,25 @@
 <div align="center">
   <img src="dashboard/assets/favicon.svg" alt="SuspectingWAF Logo" width="120" height="120" />
   <h1>🛡️ SuspectingWAF</h1>
-  <p>A fast, zero-config, self-hosted Web Application Firewall built in Node.js</p>
+  <p>A fast, self-hosted Web Application Firewall built in Node.js.</p>
+  <p><b>Developed by Prakhar Shakya</b></p>
 </div>
 
 ---
 
-**SuspectingWAF** is a modern reverse proxy and Web Application Firewall (WAF) designed to protect your web applications from common attacks (SQLi, XSS, RCE, Path Traversal, etc.) without the heavy configuration overhead of traditional WAFs like ModSecurity.
+**SuspectingWAF** is a modern reverse proxy and Web Application Firewall (WAF) developed by **Prakhar Shakya**, an aspiring Cybersecurity Engineer specializing in Web Application Security, Malware Analysis, and Defensive Security. 
 
-It sits in front of your web servers, inspects incoming traffic, and blocks malicious requests before they ever reach your backend.
+This project was built from scratch as part of a mission to develop production-quality defensive security tools and deeply understand the mechanics of web-based attacks (and how to stop them).
+
+## 👨‍💻 About the Developer
+
+- **Name**: Prakhar Shakya
+- **Profile**: B.Tech CSE (Cyber Security) Student, 3rd Year
+- **GitHub**: [@Suspecting](https://github.com/Suspecting)
+- **Portfolio**: [sussy-port.netlify.app](https://sussy-port.netlify.app/)
+- **Interests**: Defensive Security, Malware Analysis, Bug Bounty, Threat Hunting.
+
+---
 
 ## ✨ Features
 
@@ -18,7 +29,7 @@ It sits in front of your web servers, inspects incoming traffic, and blocks mali
 - **Dynamic Rate Limiting**: Per-IP sliding window rate limiting that automatically bans abusive IPs.
 - **Bot Detection**: Blocks known bad crawlers and scanners (Nuclei, SQLmap, Nikto, etc.).
 - **SSL Termination**: Manage and terminate SSL/TLS certificates directly in the proxy.
-- **Management Dashboard**: A beautiful, dark-themed UI to view attack logs, manage sites, and configure rules.
+- **Management Dashboard**: A beautiful, clean UI to view attack logs, manage sites, and configure rules.
 - **Custom Rules Engine**: Create your own allow/block rules based on IP, User-Agent, URLs, or Headers.
 
 ## 🚀 Quick Start
@@ -52,9 +63,9 @@ It sits in front of your web servers, inspects incoming traffic, and blocks mali
    ```
 
 5. **Access the Dashboard**: 
-   Open `http://localhost:9443/dashboard` in your browser.
+   Open `http://localhost:9444/login.html` in your browser.
    - **Default Username:** `admin`
-   - **Default Password:** `admin123` *(Change this immediately in Settings!)*
+   - **Default Password:** `suspecting123` *(Change this immediately in Settings!)*
 
 ## 📚 Documentation
 
@@ -76,10 +87,6 @@ This will build the image and start the WAF. The SQLite database will be mounted
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-## 🛡️ Security
-
-If you discover a security vulnerability within SuspectingWAF, please send an e-mail via the contact info in [SECURITY.md](SECURITY.md). All security vulnerabilities will be promptly addressed.
-
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. Copyright (c) 2026 Prakhar Shakya.

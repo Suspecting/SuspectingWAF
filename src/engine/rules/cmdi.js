@@ -1,26 +1,16 @@
-// src/engine/rules/cmdi.js
-// OS command injection detection
-// checks for shell metacharacters and known dangerous commands
-
 const RULE_ID = 'cmdi';
 const RULE_NAME = 'Command Injection';
-
-// shell metacharacters that enable chaining commands
 const SHELL_METACHAR_PATTERNS = [
   /;\s*(ls|cat|id|whoami|uname|pwd|wget|curl|nc|ncat|bash|sh|perl|python|ruby|php|node)\b/i,
   /\|\s*(ls|cat|id|whoami|uname|pwd|wget|curl|nc|ncat|bash|sh|perl|python|ruby|php|node)\b/i,
   /&&\s*(ls|cat|id|whoami|uname|pwd|wget|curl|nc|ncat|bash|sh)\b/i,
   /\|\|\s*(ls|cat|id|whoami|uname|pwd|wget|curl|nc|ncat|bash|sh)\b/i,
 ];
-
-// backtick and $() command substitution
 const SUBSTITUTION_PATTERNS = [
   /`[^`]*`/,                               // `command`
   /\$\([^)]+\)/,                            // $(command)
   /\$\{[^}]*\}/,                            // ${variable} (could be used for injection)
 ];
-
-// known dangerous commands (standalone patterns)
 const DANGEROUS_COMMANDS = [
   /\b(\/bin\/(sh|bash|dash|zsh|csh|ksh))\b/,
   /\b(\/usr\/bin\/(env|perl|python|ruby|php|node))\b/,
@@ -36,8 +26,6 @@ const DANGEROUS_COMMANDS = [
   /\bmkfifo\b/i,                           // named pipes (reverse shells)
   /\b\/dev\/(tcp|udp)\//i,                 // bash /dev/tcp reverse shell
 ];
-
-// reverse shell patterns — very high confidence
 const REVERSE_SHELL_PATTERNS = [
   /bash\s+-i\s+>&\s*\/dev\/(tcp|udp)\//i,
   /\bexec\s+\d+<>\/dev\/(tcp|udp)\//i,
@@ -55,8 +43,6 @@ function check(req) {
     if (!value || value.length < 3) continue;
 
     const decoded = decodeURISafe(value);
-
-    // reverse shell patterns — critical severity
     for (const pattern of REVERSE_SHELL_PATTERNS) {
       if (pattern.test(decoded)) {
         return {
@@ -67,8 +53,6 @@ function check(req) {
         };
       }
     }
-
-    // shell metacharacters + dangerous commands
     for (const pattern of SHELL_METACHAR_PATTERNS) {
       if (pattern.test(decoded)) {
         return {
@@ -79,11 +63,8 @@ function check(req) {
         };
       }
     }
-
-    // command substitution
     for (const pattern of SUBSTITUTION_PATTERNS) {
       if (pattern.test(decoded)) {
-        // check if there's also a dangerous command inside
         const inner = decoded.match(pattern);
         if (inner && DANGEROUS_COMMANDS.some(dc => dc.test(inner[0]))) {
           return {
@@ -95,8 +76,6 @@ function check(req) {
         }
       }
     }
-
-    // standalone dangerous commands
     for (const pattern of DANGEROUS_COMMANDS) {
       if (pattern.test(decoded)) {
         return {

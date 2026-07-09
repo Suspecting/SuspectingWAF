@@ -1,6 +1,3 @@
-// dashboard/js/pages/logs.js
-// Attack logs page
-
 const LogsPage = {
   currentPage: 1,
   limit: 50,
@@ -11,8 +8,6 @@ const LogsPage = {
     
     const actionsEl = document.getElementById('pageActions');
     DOM.empty(actionsEl);
-
-    // render filter bar
     actionsEl.innerHTML = `
       <div class="filter-bar">
         <select id="filterSeverity" class="form-select">
@@ -35,8 +30,6 @@ const LogsPage = {
     document.getElementById('btnRefresh').addEventListener('click', () => {
       this.loadData();
     });
-
-    // main container
     const bodyEl = document.getElementById('pageBody');
     bodyEl.innerHTML = `
       <div class="card mb-md">
@@ -131,7 +124,6 @@ const LogsPage = {
 
   async showDetailModal(row) {
     try {
-      // fetch full details to get headers which might be large
       const res = await API.get(`/logs/${row.id}`);
       const log = res.log;
 
