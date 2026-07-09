@@ -25,6 +25,7 @@ const DANGEROUS_COMMANDS = [
   /\brm\s+(-rf?|--force)\b/i,             // rm -rf
   /\bmkfifo\b/i,                           // named pipes (reverse shells)
   /\b\/dev\/(tcp|udp)\//i,                 // bash /dev/tcp reverse shell
+  /\b(ping|nslookup|netstat|ifconfig|ipconfig|whoami|net user|type|dir|arp|route|traceroute|tracert)(\.exe)?\s+/i, // direct raw commands
 ];
 const REVERSE_SHELL_PATTERNS = [
   /bash\s+-i\s+>&\s*\/dev\/(tcp|udp)\//i,
@@ -104,7 +105,7 @@ function collectTargets(req) {
       if (typeof v === 'string') targets.push({ source: `body.${k}`, value: v });
     }
   } else if (req.body && typeof req.body === 'string') {
-    targets.push({ source: 'body', value: req.body });
+    targets.push({ source: 'body', value: decodeURISafe(req.body.replace(/\+/g, ' ')) });
   }
   return targets;
 }

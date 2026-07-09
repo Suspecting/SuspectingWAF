@@ -13,6 +13,8 @@ const TRAVERSAL_SEQUENCES = [
   /\.\.\%c0%af/i,                 // overlong UTF-8
   /\.\.\%c1%9c/i,
   /\.\.%255c/i,
+  /^(https?|ftp|php|data|expect|dict|file):\/\//i, // RFI wrappers at start of payload
+  /=(https?|ftp|php|data|expect|dict|file):\/\//i, // RFI wrappers after equals
 ];
 const SENSITIVE_FILES = [
   /\/etc\/passwd/i,
@@ -98,11 +100,13 @@ function getAllParams(req) {
   const params = [];
   if (req.query) {
     for (const [k, v] of Object.entries(req.query)) {
+      if (['callbackUrl', 'redirect', 'redirectUri'].includes(k)) continue;
       params.push({ source: `query.${k}`, value: String(v) });
     }
   }
   if (req.body && typeof req.body === 'object') {
     for (const [k, v] of Object.entries(req.body)) {
+      if (['callbackUrl', 'redirect', 'redirectUri'].includes(k)) continue;
       if (typeof v === 'string') params.push({ source: `body.${k}`, value: v });
     }
   }

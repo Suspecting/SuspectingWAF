@@ -31,10 +31,12 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-router.get('/me', (req, res) => {
+const authMiddleware = require('../middleware/auth');
+
+router.get('/me', authMiddleware, (req, res) => {
   res.json({ user: req.user });
 });
-router.put('/password', async (req, res) => {
+router.put('/password', authMiddleware, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {

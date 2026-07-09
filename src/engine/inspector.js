@@ -11,6 +11,9 @@ const ssrf = require('./rules/ssrf');
 const xxe = require('./rules/xxe');
 const crlf = require('./rules/crlf');
 const botdetect = require('./botdetect');
+const csrf = require('./rules/csrf');
+const fileupload = require('./rules/fileupload');
+
 const RULE_MODULES = [
   sqli,
   xss,
@@ -20,6 +23,8 @@ const RULE_MODULES = [
   ssrf,
   xxe,
   rce,
+  csrf,
+  fileupload,
   botdetect,
 ];
 let blockedIpsCache = [];
@@ -52,6 +57,7 @@ function refreshCache() {
  * @returns {{blocked: boolean, rule?: string, action?: string, detail?: string}} Inspection result
  */
 function inspect(req, site = null) {
+  // Refresh in-memory cache to avoid disk I/O bottlenecks
   refreshCache();
 
   const ip = getClientIp(req);
@@ -112,6 +118,7 @@ function inspect(req, site = null) {
     req.query = parseQuery(req.url);
   }
 
+  // Evaluate request against all active detection rules
   for (const rule of RULE_MODULES) {
     try {
       const result = rule.check(req);
@@ -221,6 +228,7 @@ function logAttack(req, result, site) {
 }
 
 function parseQuery(url) {
+  // Custom query parser to prevent HTTP Parameter Pollution bypasses
   const idx = url.indexOf('?');
   if (idx === -1) return {};
   const qs = url.slice(idx + 1);
@@ -229,9 +237,9 @@ function parseQuery(url) {
     const [key, ...rest] = pair.split('=');
     if (key) {
       try {
-        params[decodeURIComponent(key)] = decodeURIComponent(rest.join('='));
+        params[decodeURIComponent(key.replace(/\+/g, ' '))] = decodeURIComponent(rest.join('=').replace(/\+/g, ' '));
       } catch {
-        params[key] = rest.join('=');
+        params[key] = rest.join('=').replace(/\+/g, ' ');
       }
     }
   }

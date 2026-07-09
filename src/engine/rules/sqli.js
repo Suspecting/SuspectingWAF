@@ -8,6 +8,7 @@ const SQL_KEYWORDS = [
   'LOAD_FILE', 'INTO OUTFILE', 'INTO DUMPFILE',
 ];
 const DANGEROUS_PATTERNS = [
+  // Match dangerous SQL structures and functions
   /(\bunion\b[\s/\*]+\bselect\b)/i,                    // UNION SELECT
   /(\bselect\b[\s\S]+\bfrom\b[\s\S]+\bwhere\b)/i,      // SELECT...FROM...WHERE
   /(\binsert\b[\s]+\binto\b)/i,                         // INSERT INTO
@@ -25,6 +26,7 @@ const DANGEROUS_PATTERNS = [
   /(\bsys\.(objects|columns|tables)\b)/i,               // sys.objects (MSSQL)
 ];
 const TAUTOLOGY_PATTERNS = [
+  // Match common authentication bypass tautologies (e.g. OR 1=1)
   /['"][\s]*or[\s]+['"]?\d+['"]?[\s]*=[\s]*['"]?\d+/i,     // ' OR '1'='1
   /['"][\s]*or[\s]+['"]?[\w]+['"]?[\s]*=[\s]*['"]?[\w]+/i,  // ' OR 'x'='x
   /[\s]or[\s]+1[\s]*=[\s]*1/i,                               // OR 1=1
@@ -90,6 +92,7 @@ function check(req) {
 }
 
 function checkStructural(value) {
+  // Check for structural anomalies: unbalanced quotes combined with SQL keywords
   const singleQuotes = (value.match(/'/g) || []).length;
   const hasKeywords = SQL_KEYWORDS.some(kw => 
     new RegExp('\\b' + kw + '\\b', 'i').test(value)
@@ -127,7 +130,7 @@ function collectTargets(req) {
       }
     }
   } else if (req.body && typeof req.body === 'string') {
-    targets.push({ source: 'body', value: req.body });
+    targets.push({ source: 'body', value: decodeURISafe(req.body.replace(/\+/g, ' ')) });
   }
   const cookies = req.headers?.cookie;
   if (cookies) {

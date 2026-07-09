@@ -25,11 +25,11 @@ class DataTable {
         style: this.onRowClick ? 'cursor: pointer' : '' 
       }, this.columns.map(col => {
         const val = row[col.key];
-        const content = col.render ? col.render(val, row) : (val !== null && val !== undefined ? String(val) : '');
+        let content = col.render ? col.render(val, row) : (val !== null && val !== undefined ? String(val) : '');
         
         const td = h('td');
-        if (typeof content === 'string') {
-          td.innerHTML = content; // allow HTML from renderers (be careful with XSS!)
+        if (typeof content === 'string' || typeof content === 'number') {
+          td.innerHTML = String(content);
         } else if (content instanceof Node) {
           td.appendChild(content);
         }

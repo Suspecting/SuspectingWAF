@@ -36,7 +36,11 @@ function check(req) {
   }
   if (req.body && typeof req.body === 'object') {
     for (const [k, v] of Object.entries(req.body)) {
-      if (typeof v === 'string') targets.push({ source: `body.${k}`, value: v });
+      if (typeof v === 'string') {
+        // Whitelist common authentication callback fields to prevent false positives in NextAuth/OAuth
+        if (['callbackUrl', 'redirect', 'redirectUri'].includes(k)) continue;
+        targets.push({ source: `body.${k}`, value: v });
+      }
     }
   } else if (req.body && typeof req.body === 'string') {
     targets.push({ source: 'body', value: req.body });

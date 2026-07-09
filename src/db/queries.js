@@ -29,7 +29,7 @@ function updateSite(id, fields) {
   for (const [key, val] of Object.entries(fields)) {
     if (allowed.includes(key)) {
       updates.push(`${key} = ?`);
-      values.push(val);
+      values.push(typeof val === 'boolean' ? (val ? 1 : 0) : val);
     }
   }
   if (updates.length === 0) return null;
@@ -118,7 +118,7 @@ function updateCustomRule(id, fields) {
   for (const [key, val] of Object.entries(fields)) {
     if (allowed.includes(key)) {
       updates.push(`${key} = ?`);
-      values.push(val);
+      values.push(typeof val === 'boolean' ? (val ? 1 : 0) : val);
     }
   }
   if (updates.length === 0) return null;

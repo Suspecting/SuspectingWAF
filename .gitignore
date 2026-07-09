@@ -13,3 +13,8 @@ thumbs.db
 *.swp
 *.swo
 *~
+.vscode/
+.idea/
+*.pdf
+*.pyc
+__pycache__/

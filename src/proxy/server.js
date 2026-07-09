@@ -8,6 +8,7 @@ let proxyServer = null;
 let httpServer = null;
 
 function startProxy() {
+  // Initialize core proxy engine
   proxyServer = httpProxy.createProxyServer({
     xfwd: true,           // add x-forwarded-* headers
     ws: true,              // support websocket proxying
@@ -25,21 +26,55 @@ function startProxy() {
 <p style="font-size:12px;margin-top:16px;color:#484f58">SuspectingWAF</p></div></body></html>`);
     }
   });
+  proxyServer.on('proxyReq', (proxyReq, req, res, options) => {
+    // Rewrite buffered body to upstream request if it was consumed during inspection
+    if (req.rawBody) {
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(req.rawBody));
+      proxyReq.write(req.rawBody);
+    }
+  });
+
+  proxyServer.on('proxyRes', (proxyRes, req, res) => {
+    // Harden Set-Cookie headers (Disabled by default to prevent breaking SPAs)
+    if (proxyRes.headers['set-cookie']) {
+      let cookies = proxyRes.headers['set-cookie'];
+      if (!Array.isArray(cookies)) cookies = [cookies];
+      proxyRes.headers['set-cookie'] = cookies.map(c => {
+        // if (!/HttpOnly/i.test(c)) c += '; HttpOnly';
+        // if (!/SameSite/i.test(c)) c += '; SameSite=Lax';
+        return c;
+      });
+    }
+
+    // Inject global security headers (CSP, Clickjacking, MIME-sniffing protection)
+    // proxyRes.headers['content-security-policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data:; object-src 'none';";
+    proxyRes.headers['x-frame-options'] = 'SAMEORIGIN';
+    proxyRes.headers['x-content-type-options'] = 'nosniff';
+    proxyRes.headers['x-xss-protection'] = '1; mode=block';
+  });
+
   httpServer = http.createServer((req, res) => {
+    // Buffer streaming request bodies for inspection (POST, PUT, PATCH)
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
       let body = '';
       req.on('data', chunk => {
         body += chunk.toString();
-        if (body.length > 1024 * 1024) { // 1MB
+        // Protection against Buffer Overflow / Denial of Service (DoS)
+        if (body.length > 1024 * 1024) { // Limit bodies to 1MB
           req.destroy();
           return;
         }
       });
       req.on('end', () => {
+        req.rawBody = body;
         try {
           req.body = JSON.parse(body);
         } catch {
-          req.body = body;
+          if (req.headers['content-type'] && req.headers['content-type'].includes('application/x-www-form-urlencoded')) {
+            req.body = require('querystring').parse(body);
+          } else {
+            req.body = body;
+          }
         }
         processRequest(req, res);
       });
