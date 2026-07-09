@@ -1,0 +1,15 @@
+node_modules/
+data/
+*.db
+*.db-journal
+.env
+logs/
+*.log
+*.pem
+*.key
+*.crt
+.DS_Store
+thumbs.db
+*.swp
+*.swo
+*~

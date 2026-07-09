@@ -1,0 +1,39 @@
+{
+  "name": "suspecting-waf",
+  "version": "1.0.0",
+  "description": "Self-hosted WAF (Web Application Firewall) / reverse proxy to protect your web apps from attacks and exploits.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test tests/**/*.test.js",
+    "setup": "node src/db/migrations.js",
+    "resetadmin": "node scripts/resetadmin.js"
+  },
+  "keywords": [
+    "waf",
+    "firewall",
+    "security",
+    "reverse-proxy",
+    "web-security",
+    "sql-injection",
+    "xss",
+    "self-hosted"
+  ],
+  "author": "SuspectingWAF Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "express": "^4.21.0",
+    "http-proxy": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

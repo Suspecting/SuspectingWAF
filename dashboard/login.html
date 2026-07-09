@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login - SuspectingWAF</title>
+  <style>
+    /* SafeLine-style Light Theme Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f5f7fa;
+      color: #303133;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    /* Top Error Toast (matching screenshot) */
+    .top-toast {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #fef0f0;
+      color: #f56c6c;
+      padding: 12px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,0.05);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .top-toast.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(10px);
+    }
+    .toast-icon {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #f56c6c;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    /* Login Card */
+    .login-wrapper {
+      background: #ffffff;
+      width: 420px;
+      border-radius: 4px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+      padding: 32px 40px 40px 40px;
+    }
+
+    /* Header */
+    .login-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    .login-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #303133;
+    }
+    .login-subtitle {
+      font-size: 14px;
+      color: #909399;
+    }
+
+    /* Form Fields */
+    .form-item {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    .input-wrapper {
+      position: relative;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      transition: border-color 0.2s;
+      background: #fff;
+    }
+    .input-wrapper:focus-within {
+      border-color: #14988d;
+    }
+    .input-wrapper.filled {
+      background: #f0f8ff; /* Light blue tint for autofill/filled state like screenshot */
+    }
+    
+    /* Legend/Label inside border */
+    .input-label {
+      position: absolute;
+      top: -8px;
+      left: 10px;
+      background: #fff;
+      padding: 0 4px;
+      font-size: 12px;
+      color: #909399;
+      line-height: 1;
+      z-index: 1;
+    }
+    
+    .input-field {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 14px 15px;
+      font-size: 14px;
+      color: #606266;
+      outline: none;
+    }
+    
+    .eye-icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #c0c4cc;
+      cursor: pointer;
+    }
+
+    /* Button */
+    .login-btn {
+      width: 100%;
+      background-color: #14988d;
+      border: none;
+      color: white;
+      padding: 12px 0;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 8px;
+      margin-bottom: 20px;
+    }
+    .login-btn:hover {
+      background-color: #11837a;
+    }
+    .login-btn:disabled {
+      background-color: #a0cfff;
+      cursor: not-allowed;
+    }
+
+    /* Footer Links */
+    .login-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    .footer-link {
+      color: #14988d;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .footer-link:hover {
+      opacity: 0.8;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Top Toast Error -->
+  <div class="top-toast" id="errorToast">
+    <div class="toast-icon">!</div>
+    <span id="errorMsg">Username and password not match</span>
+  </div>
+
+  <div class="login-wrapper">
+    <div class="login-header">
+      <div class="login-title">Login</div>
+      <div class="login-subtitle">SuspectingWAF</div>
+    </div>
+
+    <form id="loginForm" autocomplete="on">
+      <div class="form-item">
+        <div class="input-label">Username</div>
+        <div class="input-wrapper filled" id="userWrapper">
+          <input type="text" id="username" name="username" class="input-field" value="admin" autocomplete="username" required>
+        </div>
+      </div>
+
+      <div class="form-item">
+        <div class="input-label">Password</div>
+        <div class="input-wrapper" id="passWrapper">
+          <input type="password" id="password" name="password" class="input-field" autocomplete="current-password" required>
+          <div class="eye-icon" id="togglePassword">
+            <!-- simple SVG eye icon -->
+            <svg viewBox="0 0 1024 1024" width="16" height="16" fill="currentColor">
+              <path d="M512 256C256 256 70.2 463.5 13.9 497.1a32 32 0 0 0 0 29.8C70.2 560.5 256 768 512 768s441.8-207.5 498.1-241.1a32 32 0 0 0 0-29.8C953.8 463.5 768 256 512 256zm0 448c-205.2 0-366.1-155.3-431-192 64.8-36.7 225.8-192 431-192s366.1 155.3 431 192c-64.9 36.7-225.8 192-431 192z"></path>
+              <path d="M512 384c-70.6 0-128 57.4-128 128s57.4 128 128 128 128-57.4 128-128-57.4-128-128-128zm0 192c-35.3 0-64-28.7-64-64s28.7-64 64-64 64 28.7 64 64-28.7 64-64 64z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="login-btn" id="loginBtn">LOGIN</button>
+
+      <div class="login-footer">
+        <a class="footer-link">Get latest version</a>
+        <a class="footer-link">Forgot your password?</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // redirect if logged in
+    if (localStorage.getItem('swaf_token')) {
+      window.location.href = '/dashboard/';
+    }
+
+    const form = document.getElementById('loginForm');
+    const toast = document.getElementById('errorToast');
+    const errorMsg = document.getElementById('errorMsg');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    // UI interactions
+    const userInp = document.getElementById('username');
+    const passInp = document.getElementById('password');
+    const userWrap = document.getElementById('userWrapper');
+    const passWrap = document.getElementById('passWrapper');
+
+    const updateFilledState = () => {
+      userInp.value ? userWrap.classList.add('filled') : userWrap.classList.remove('filled');
+      passInp.value ? passWrap.classList.add('filled') : passWrap.classList.remove('filled');
+    };
+
+    userInp.addEventListener('input', updateFilledState);
+    passInp.addEventListener('input', updateFilledState);
+
+    // Password visibility toggle
+    document.getElementById('togglePassword').addEventListener('click', () => {
+      const type = passInp.getAttribute('type') === 'password' ? 'text' : 'password';
+      passInp.setAttribute('type', type);
+    });
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      toast.classList.add('visible');
+      setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 4000);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'LOGGING IN...';
+      toast.classList.remove('visible');
+
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            username: userInp.value.trim(), 
+            password: passInp.value 
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Username and password not match');
+        }
+
+        localStorage.setItem('swaf_token', data.token);
+        localStorage.setItem('swaf_user', JSON.stringify(data.user));
+        window.location.href = '/dashboard/';
+      } catch (err) {
+        showError(err.message === 'Invalid credentials' ? 'Username and password not match' : err.message);
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'LOGIN';
+      }
+    });
+  </script>
+</body>
+</html>

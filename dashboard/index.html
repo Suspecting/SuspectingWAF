@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SuspectingWAF — Dashboard</title>
+  <meta name="description" content="SuspectingWAF management dashboard — monitor and manage your web application firewall">
+  <link rel="icon" href="/dashboard/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/dashboard/css/reset.css">
+  <link rel="stylesheet" href="/dashboard/css/variables.css">
+  <link rel="stylesheet" href="/dashboard/css/layout.css">
+  <link rel="stylesheet" href="/dashboard/css/components.css">
+  <link rel="stylesheet" href="/dashboard/css/forms.css">
+  <link rel="stylesheet" href="/dashboard/css/charts.css">
+</head>
+<body>
+  <div class="app-layout" id="app">
+    <!-- sidebar gets injected here by sidebar.js -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- main content area -->
+    <main class="main-content">
+      <header class="page-header" id="pageHeader">
+        <div>
+          <h1 class="page-title" id="pageTitle">Dashboard</h1>
+          <p class="page-subtitle" id="pageSubtitle">Overview of your WAF activity</p>
+        </div>
+        <div class="page-actions" id="pageActions"></div>
+      </header>
+      <div class="page-body" id="pageBody">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- toast notification container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- modal overlay -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+  <!-- JS modules -->
+  <script src="/dashboard/js/utils/dom.js"></script>
+  <script src="/dashboard/js/utils/format.js"></script>
+  <script src="/dashboard/js/utils/validate.js"></script>
+  <script src="/dashboard/js/api.js"></script>
+  <script src="/dashboard/js/auth.js"></script>
+  <script src="/dashboard/js/components/toast.js"></script>
+  <script src="/dashboard/js/components/modal.js"></script>
+  <script src="/dashboard/js/components/sidebar.js"></script>
+  <script src="/dashboard/js/components/table.js"></script>
+  <script src="/dashboard/js/components/chart.js"></script>
+  <script src="/dashboard/js/pages/dashboard.js"></script>
+  <script src="/dashboard/js/pages/sites.js"></script>
+  <script src="/dashboard/js/pages/logs.js"></script>
+  <script src="/dashboard/js/pages/rules.js"></script>
+  <script src="/dashboard/js/pages/iplist.js"></script>
+  <script src="/dashboard/js/pages/certs.js"></script>
+  <script src="/dashboard/js/pages/ratelimit.js"></script>
+  <script src="/dashboard/js/pages/settings.js"></script>
+  <script src="/dashboard/js/app.js"></script>
+</body>
+</html>

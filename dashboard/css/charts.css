@@ -1,0 +1,125 @@
+/* dashboard/css/charts.css */
+/* simple light theme charts */
+
+.chart-container {
+  width: 100%;
+  height: 250px;
+  position: relative;
+}
+
+.attack-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attack-type-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.attack-type-label {
+  width: 120px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attack-type-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.attack-type-bar {
+  height: 100%;
+  background: var(--green);
+  border-radius: 4px;
+}
+
+.attack-type-count {
+  width: 60px;
+  text-align: right;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.top-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-list-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 14px;
+}
+.top-list-item:last-child { border: none; }
+
+.top-list-rank {
+  width: 24px;
+  color: var(--text-muted);
+}
+
+.top-list-value {
+  flex: 1;
+  font-family: monospace;
+  color: var(--text-primary);
+}
+
+.top-list-count {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.recent-attack-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+.recent-attack-item:last-child { border: none; }
+.recent-attack-time { color: var(--text-muted); width: 70px; }
+.recent-attack-rule { flex: 1; color: var(--text-primary); }
+.recent-attack-ip { font-family: monospace; color: var(--text-secondary); }
+
+/* Update pagination for light mode */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-default);
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.page-btn:hover:not(:disabled) { border-color: var(--green); color: var(--green); }
+.page-btn:disabled { color: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
+
+/* pagination container */
+#paginationContainer {
+  background: #fff;
+  border: 1px solid var(--border-default);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+}
