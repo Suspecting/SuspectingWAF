@@ -6,7 +6,7 @@ If you find a security vulnerability in SuspectingWAF, **do not open a public is
 
 Instead, please report it responsibly:
 
-1. Email: security@suspectingwaf.dev (or open a private security advisory on GitHub)
+1. Email: shakyaprakhar20@gmail.com
 2. Include a description of the vulnerability
 3. Steps to reproduce if possible
 4. Your assessment of the impact
