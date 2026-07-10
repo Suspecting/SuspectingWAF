@@ -131,15 +131,6 @@ Once the WAF is running, you need to tell it which backend website it should pro
    - Click **Save**.
 4. **Route Public Traffic:** Configure your system (like Nginx, iptables, or your cloud load balancer) to route all incoming port 80/443 traffic to the WAF's proxy port (**`http://localhost:8080`**). The WAF will act as the public-facing gateway, intercepting attacks and seamlessly forwarding clean traffic to your hidden backend!
 
-## 🐳 Docker Deployment
-
-You can easily run SuspectingWAF using Docker:
-
-```bash
-docker-compose up -d
-```
-
-This will build the image and start the WAF. The SQLite database will be mounted as a volume so your data persists across container restarts.
 
 ---
 
