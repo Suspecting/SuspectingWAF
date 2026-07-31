@@ -1,11 +1,14 @@
 const http = require('http');
+const https = require('https');
 const httpProxy = require('http-proxy');
 const logger = require('../utils/logger');
 const config = require('../utils/config');
 const { handleRequest } = require('./handler');
+const { sniCallback, ensureDefaultCert } = require('./ssl');
 
 let proxyServer = null;
 let httpServer = null;
+let httpsServer = null;
 
 function startProxy() {
   // Initialize core proxy engine
@@ -13,6 +16,7 @@ function startProxy() {
     xfwd: true,           // add x-forwarded-* headers
     ws: true,              // support websocket proxying
     changeOrigin: true,    // change the origin header to match the target
+    cookieDomainRewrite: { '*': '' } // strip explicit domains from cookies so they match the proxy host
   });
   proxyServer.on('error', (err, req, res) => {
     logger.error('Proxy error', { error: err.message, url: req.url });
@@ -27,10 +31,9 @@ function startProxy() {
     }
   });
   proxyServer.on('proxyReq', (proxyReq, req, res, options) => {
-    // Rewrite buffered body to upstream request if it was consumed during inspection
-    if (req.rawBody) {
+    // Ensure Content-Length is correct if we buffered the body
+    if (req.rawBody !== undefined) {
       proxyReq.setHeader('Content-Length', Buffer.byteLength(req.rawBody));
-      proxyReq.write(req.rawBody);
     }
   });
 
@@ -53,49 +56,75 @@ function startProxy() {
     proxyRes.headers['x-xss-protection'] = '1; mode=block';
   });
 
-  httpServer = http.createServer((req, res) => {
-    // Buffer streaming request bodies for inspection (POST, PUT, PATCH)
-    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-      let body = '';
-      req.on('data', chunk => {
-        body += chunk.toString();
-        // Protection against Buffer Overflow / Denial of Service (DoS)
-        if (body.length > 1024 * 1024) { // Limit bodies to 1MB
-          req.destroy();
-          return;
-        }
-      });
-      req.on('end', () => {
-        req.rawBody = body;
-        try {
-          req.body = JSON.parse(body);
-        } catch {
-          if (req.headers['content-type'] && req.headers['content-type'].includes('application/x-www-form-urlencoded')) {
-            req.body = require('querystring').parse(body);
-          } else {
-            req.body = body;
+  // --- Shared request handler (buffers POST bodies, then inspects + proxies) ---
+  function createRequestHandler() {
+    return (req, res) => {
+      if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+          // Protection against Buffer Overflow / Denial of Service (DoS)
+          if (body.length > 1024 * 1024) { // Limit bodies to 1MB
+            req.destroy();
+            return;
           }
-        }
+        });
+        req.on('end', () => {
+          req.rawBody = body;
+          try {
+            req.body = JSON.parse(body);
+          } catch {
+            if (req.headers['content-type'] && req.headers['content-type'].includes('application/x-www-form-urlencoded')) {
+              req.body = require('querystring').parse(body);
+            } else {
+              req.body = body;
+            }
+          }
+          processRequest(req, res);
+        });
+      } else {
         processRequest(req, res);
-      });
-    } else {
-      processRequest(req, res);
-    }
+      }
+    };
+  }
+
+  // --- HTTP server: redirect all traffic to HTTPS ---
+  httpServer = http.createServer((req, res) => {
+    const host = (req.headers.host || 'localhost').split(':')[0];
+    const httpsUrl = `https://${host}:${config.proxySslPort}${req.url}`;
+    res.writeHead(301, { Location: httpsUrl });
+    res.end();
   });
-  httpServer.on('upgrade', (req, socket, head) => {
-    const { findSiteForRequest } = require('./handler');
-    const host = req.headers.host || '';
-    const site = findSiteForRequest(host, req.socket?.localPort);
-    if (site) {
-      proxyServer.ws(req, socket, head, { target: site.upstream_url });
-    } else {
-      socket.destroy();
-    }
+  // Keep-alive: reuse TCP connections instead of opening a new socket per request
+  httpServer.keepAliveTimeout = 65000;
+  httpServer.headersTimeout = 66000;
+  httpServer.listen(config.proxyPort, () => {
+    logger.info(`HTTP proxy on port ${config.proxyPort} → redirecting to HTTPS :${config.proxySslPort}`);
   });
 
-  httpServer.listen(config.proxyPort, () => {
-    logger.info(`Reverse proxy listening on port ${config.proxyPort}`);
-  });
+  // --- HTTPS server: full WAF inspection over TLS ---
+  const certResult = ensureDefaultCert();
+  if (certResult) {
+    httpsServer = https.createServer({ SNICallback: sniCallback }, createRequestHandler());
+    // Keep-alive: reuse TCP connections for high throughput under stress
+    httpsServer.keepAliveTimeout = 65000;
+    httpsServer.headersTimeout = 66000;
+    httpsServer.on('upgrade', (req, socket, head) => {
+      const { findSiteForRequest } = require('./handler');
+      const host = req.headers.host || '';
+      const site = findSiteForRequest(host, req.socket?.localPort);
+      if (site) {
+        proxyServer.ws(req, socket, head, { target: site.upstream_url });
+      } else {
+        socket.destroy();
+      }
+    });
+    httpsServer.listen(config.proxySslPort, () => {
+      logger.info(`HTTPS proxy listening on port ${config.proxySslPort} (TLS)`);
+    });
+  } else {
+    logger.error('SSL certificate unavailable — HTTPS server not started. Check data/certs/ directory.');
+  }
 
   return httpServer;
 }
@@ -105,7 +134,11 @@ function processRequest(req, res) {
 
   if (site) {
     try {
-      proxyServer.web(req, res, { target: site.upstream_url });
+      const options = { target: site.upstream_url };
+      if (req.rawBody !== undefined) {
+        options.buffer = require('stream').Readable.from([req.rawBody]);
+      }
+      proxyServer.web(req, res, options);
     } catch (err) {
       logger.error('Failed to proxy request', { error: err.message });
       if (!res.headersSent) {
@@ -119,7 +152,11 @@ function processRequest(req, res) {
 function stopProxy() {
   if (httpServer) {
     httpServer.close();
-    logger.info('Proxy server stopped');
+    logger.info('HTTP proxy stopped');
+  }
+  if (httpsServer) {
+    httpsServer.close();
+    logger.info('HTTPS proxy stopped');
   }
   if (proxyServer) {
     proxyServer.close();

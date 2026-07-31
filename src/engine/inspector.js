@@ -30,8 +30,10 @@ const RULE_MODULES = [
 let blockedIpsCache = [];
 let allowedIpsCache = [];
 let customRulesCache = [];
+let wafModeCache = 'block';
+let rateLimitCache = {}; // keyed by site.id
 let lastCacheRefresh = 0;
-const CACHE_TTL = 30000; // refresh every 30 seconds
+const CACHE_TTL = 10000; // refresh every 10 seconds
 
 function refreshCache() {
   const now = Date.now();
@@ -41,6 +43,16 @@ function refreshCache() {
     blockedIpsCache = queries.getActiveBlockedIps();
     allowedIpsCache = queries.getActiveAllowedIps();
     customRulesCache = queries.getEnabledCustomRules();
+    wafModeCache = queries.getSetting('waf_mode') || 'block';
+    // Pre-load rate limits for all active sites
+    const allSites = queries.getAllSites();
+    rateLimitCache = {};
+    for (const site of allSites) {
+      const rl = queries.getRateLimitForSite(site.id);
+      if (rl && rl.enabled) {
+        rateLimitCache[site.id] = { rps: rl.requests_per_second, burst: rl.burst, banDuration: rl.ban_duration };
+      }
+    }
     lastCacheRefresh = now;
   } catch (err) {
     logger.error('Failed to refresh inspector cache', { error: err.message });
@@ -61,7 +73,7 @@ function inspect(req, site = null) {
   refreshCache();
 
   const ip = getClientIp(req);
-  const wafMode = queries.getSetting('waf_mode') || 'block';
+  const wafMode = wafModeCache;
   if (wafMode === 'off') {
     return { blocked: false };
   }
@@ -94,10 +106,7 @@ function inspect(req, site = null) {
   }
   let rateLimits = {};
   if (site) {
-    const rl = queries.getRateLimitForSite(site.id);
-    if (rl && rl.enabled) {
-      rateLimits = { rps: rl.requests_per_second, burst: rl.burst, banDuration: rl.ban_duration };
-    }
+    rateLimits = rateLimitCache[site.id] || {};
   }
   const rateResult = checkRateLimit(ip, rateLimits);
   if (rateResult.limited) {

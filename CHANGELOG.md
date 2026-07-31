@@ -5,6 +5,21 @@ All notable changes to SuspectingWAF will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-31
+
+### Added
+- Complete HTTPS & TLSv1.3 support on port `8443`
+- Automatic self-signed certificate generation on first boot via `openssl`
+- In-memory caching engine (10s TTL) for Site configurations, WAF Mode, and Rate Limits to achieve zero-latency DB lookups
+- `keepAliveTimeout` (120s) and connection reuse on proxy servers to handle massive concurrency
+- HTTP (8080) to HTTPS (8443) automatic 301 redirection
+- Documented `mkcert` workflow for trusted local development
+
+### Changed
+- Refactored `server.js` to utilize Node.js native `https` module alongside `http-proxy`
+- Modified `handler.js` and `inspector.js` to rely on memory cache instead of synchronous database calls per request
+- Achieved stable 4,823 RPS under `wrk` stress testing with 0 connection drops
+
 ## [1.0.0] - 2026-07-09
 
 ### Added

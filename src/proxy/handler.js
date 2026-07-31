@@ -3,6 +3,44 @@ const { inspect } = require('../engine/inspector');
 const queries = require('../db/queries');
 const logger = require('../utils/logger');
 const { getClientIp } = require('../utils/ip');
+
+// --- In-memory site cache (avoids a DB query on every single request) ---
+let sitesCache = null;
+let sitesCacheTs = 0;
+const SITES_CACHE_TTL = 5000; // refresh every 5 seconds
+
+function getCachedSites() {
+  const now = Date.now();
+  if (!sitesCache || now - sitesCacheTs > SITES_CACHE_TTL) {
+    sitesCache = queries.getAllSites();
+    sitesCacheTs = now;
+  }
+  return sitesCache;
+}
+
+// Call this whenever a site is added/edited/deleted to force an immediate refresh
+function invalidateSiteCache() {
+  sitesCache = null;
+  sitesCacheTs = 0;
+}
+
+// --- In-memory block page settings cache ---
+let blockPageCache = null;
+let blockPageCacheTs = 0;
+const BLOCK_PAGE_CACHE_TTL = 30000; // refresh every 30 seconds
+
+function getCachedBlockPageSettings() {
+  const now = Date.now();
+  if (!blockPageCache || now - blockPageCacheTs > BLOCK_PAGE_CACHE_TTL) {
+    blockPageCache = {
+      title: queries.getSetting('block_page_title') || 'Request Blocked',
+      message: queries.getSetting('block_page_message') || 'Your request has been blocked by the web application firewall.',
+    };
+    blockPageCacheTs = now;
+  }
+  return blockPageCache;
+}
+
 let requestCount = 0;
 let blockedCount = 0;
 setInterval(() => {
@@ -56,7 +94,7 @@ function handleRequest(req, res) {
 }
 
 function findSiteForRequest(host, port) {
-  const sites = queries.getAllSites();
+  const sites = getCachedSites();
   const hostname = host.split(':')[0]; // strip port from host header
 
   for (const site of sites) {
@@ -140,11 +178,11 @@ const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" wi
 const dangerIconBase64 = Buffer.from(svgStr).toString('base64');
 
 function getBlockPage(result) {
-  const title = queries.getSetting('block_page_title') || 'Request Blocked';
+  const { title, message } = getCachedBlockPageSettings();
   const code = result.retryAfter ? '429' : '403';
-  const message = result.retryAfter
+  const msg = result.retryAfter
     ? 'Rate limit exceeded. Please try again later.'
-    : queries.getSetting('block_page_message') || 'Your request has been blocked by the web application firewall.';
+    : message;
 
   const imageTag = `<img src="data:image/svg+xml;base64,${dangerIconBase64}" width="140" height="140" alt="Straw Hat Pirate" style="margin-bottom: 24px;" />`;
 
@@ -191,7 +229,7 @@ function getBlockPage(result) {
     ${imageTag}
     <div class="code">${code}</div>
     <h1>${title}</h1>
-    <p>${message}</p>
+    <p>${msg}</p>
     <div class="rule">Rule: ${result.ruleName || result.rule || 'N/A'}</div>
     <div class="footer">Protected by SuspectingWAF</div>
   </div>
@@ -216,4 +254,4 @@ function getNotFoundPage() {
 </html>`;
 }
 
-module.exports = { handleRequest, findSiteForRequest };
+module.exports = { handleRequest, findSiteForRequest, invalidateSiteCache };

@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const tls = require('tls');
+const { execSync } = require('child_process');
 const logger = require('../utils/logger');
 const config = require('../utils/config');
 const certCache = new Map();
@@ -63,19 +64,22 @@ function ensureDefaultCert() {
   if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
     return { certPath, keyPath };
   }
+  
+  if (!fs.existsSync(certsDir)) {
+    fs.mkdirSync(certsDir, { recursive: true });
+  }
+
   logger.info('Generating self-signed certificate for management UI');
 
   try {
-    const { generateKeyPairSync, createSign, X509Certificate } = require('crypto');
-    const { publicKey, privateKey } = generateKeyPairSync('rsa', {
-      modulusLength: 2048,
-      publicKeyEncoding: { type: 'spki', format: 'pem' },
-      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-    });
-    fs.writeFileSync(keyPath, privateKey);
-    fs.writeFileSync(certPath, publicKey); // not a real cert, just a placeholder
-
-    logger.warn('Self-signed cert generated. For production, replace with real certificates.');
+    const subj = '/CN=localhost/O=SuspectingWAF/C=IN';
+    execSync(
+      `openssl req -x509 -newkey rsa:2048 -keyout "${keyPath}" -out "${certPath}" -days 365 -nodes -subj "${subj}"`,
+      { stdio: 'pipe' }
+    );
+    fs.chmodSync(keyPath, 0o600);
+    logger.warn('⚠️  Self-signed certificate generated. Browser will show a security warning — click Advanced → Proceed.');
+    logger.info(`Certificate saved to: ${certPath}`);
     return { certPath, keyPath };
   } catch (err) {
     logger.error('Could not generate self-signed cert', { error: err.message });

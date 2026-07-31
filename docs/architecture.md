@@ -7,7 +7,6 @@ SuspectingWAF is built as a monolithic Node.js application, split into several d
 ### 1. The Reverse Proxy (`src/proxy/`)
 Built around `http-proxy`, this is the main entry point for internet traffic. It listens on the configured ports (usually 80 and 443).
 - When a request comes in, the proxy first determines which configured "Site" (upstream) the request belongs to based on the `Host` header.
-- If SSL is required, it handles SNI (Server Name Indication) to dynamically load the correct certificate from the database.
 - It then pauses the request and hands it over to the Detection Engine.
 - If the engine allows the request, it is proxied to the upstream target. If blocked, a 403 Forbidden is returned.
 
